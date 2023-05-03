@@ -22,6 +22,7 @@ export class GlobalDefinition {
   public hand2: THREE.Group;
   public boxSize: number;
   public boxesGroup: THREE.Group;
+  public linesGroup: THREE.Group;
   public intersected: any;
   public raycaster: any;
 
@@ -44,6 +45,7 @@ export class GlobalDefinition {
     //this.hands.hand2 = this.renderer.xr.getHand(1)
     this.boxSize = 0.05;  
     this.boxesGroup = new THREE.Group();
+    this.linesGroup = new THREE.Group();
     this.intersected = new Array();
     this.raycaster = new THREE.Raycaster();
   }

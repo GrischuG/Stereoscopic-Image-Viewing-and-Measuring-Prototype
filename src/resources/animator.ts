@@ -24,9 +24,32 @@ export class Animator {
     this.intersectObjects(this.globalObjectInstance.controller1);
     this.intersectObjects(this.globalObjectInstance.controller2);
     //console.log('After intersect Object with controllers');
+
+    this.updateLines();
     
     this.globalObjectInstance.renderer.render(this.globalObjectInstance.scene, this.globalObjectInstance.camera);
 
+  }
+
+  
+  updateLines() {
+    let lines = this.globalObjectInstance.linesGroup.children;
+
+    lines.forEach(line => {
+      let boxLeft = line.userData.boxLeft;
+      let boxRight = line.userData.boxRight;
+      
+      line.userData.geometry.setFromPoints([boxLeft.position, boxRight.position]);
+      
+      /*
+      let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
+      let text = `Distance: ${distance}`;
+      let distanceText = createText(text, 0.05);
+      distanceText.position.set(boxLeft.position.x, boxLeft.position.y + boxSize*2, boxLeft.position.z);
+      
+      line.userData.distanceText = distanceText; 
+      */
+    });
   }
 
   getIntersections(controller) {

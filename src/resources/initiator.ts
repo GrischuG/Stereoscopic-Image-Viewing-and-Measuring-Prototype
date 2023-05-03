@@ -7,6 +7,7 @@ import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerM
 import { XRHandModelFactory } from 'three/examples/jsm/webxr/XRHandModelFactory.js';
 import { on } from 'events';
 import { Animator } from './animator';
+import { createText } from 'three/examples/jsm/webxr/Text2D.js';
 
 
 @singleton()
@@ -88,18 +89,6 @@ export class Initiator {
       right: null
     };
 
-    //let grabbing = false;
-    //const scaling = {
-    //  active: false,
-    //  initialDistance: 0,
-    //  object: null,
-    //  initialScale: 1
-    //};
-
-    //const spheres = [];
-
-
-    //this.globalObjectInstance.orbitControls = new OrbitControls(this.globalObjectInstance.camera, this.globalObjectInstance.renderer.domElement);
 
     //orbit controls to move camera
     this.globalObjectInstance.orbitControls.target = new THREE.Vector3(0, 0, 0);
@@ -111,12 +100,11 @@ export class Initiator {
 
     this.globalObjectInstance.orbitControls.update();
 
+
     // controllers
   
-    //controller1 = this.globalObjectInstance.renderer.xr.getController(0);
     this.globalObjectInstance.scene.add(controller1)
 
-    //controller2 = this.globalObjectInstance.renderer.xr.getController(1);
     this.globalObjectInstance.scene.add(controller2)
 
     const controllerModelFactory = new XRControllerModelFactory();
@@ -126,10 +114,15 @@ export class Initiator {
     // hand 1
 
     // get controller left (0)
-    //controllerGrip1 = this.globalObjectInstance.renderer.xr.getControllerGrip(0);
     controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
     this.globalObjectInstance.scene.add(controllerGrip1);
 
+
+    // get controller right (1)
+    controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
+    this.globalObjectInstance.scene.add(controllerGrip2);
+
+    // Add event listeners to controllers to detect input
     controller1.addEventListener('selectstart', this.onSelectStartLeft.bind(this));
     controller1.addEventListener('selectend', this.onSelectEnd.bind(this));
 
@@ -137,8 +130,6 @@ export class Initiator {
 
 
     // get hand left (0)
-    //hand1 = this.globalObjectInstance.renderer.xr.getHand(0);
-
     hand1.userData.currentHandModel = 0;
     this.globalObjectInstance.scene.add(hand1);
     
@@ -168,15 +159,10 @@ export class Initiator {
       hand1.add(handModelFactory.createHandModel(hand1, 'mesh'));
     }
 
+
     // hand 2
 
-    // get controller right (1)
-    //controllerGrip2 = this.globalObjectInstance.renderer.xr.getControllerGrip(1);
-    controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
-    this.globalObjectInstance.scene.add(controllerGrip2);
-
     // get hand right (1)
-    //hand2 = this.globalObjectInstance.renderer.xr.getHand(1);
     hand2.userData.currentHandModel = 1;
     this.globalObjectInstance.scene.add(hand2);
     
@@ -219,7 +205,7 @@ export class Initiator {
     hand2.add(line.clone());
 
 
-    const enableSampleBox = true;
+    const enableSampleBox = false;
 
     if (enableSampleBox) {
       const geometry_Box0 = new THREE.BoxGeometry(0.2, 0.2, 0.2);
@@ -247,8 +233,6 @@ export class Initiator {
 		//
   
     console.log('Setup Controlls Finished');
-    
-
 
   }
 
@@ -264,6 +248,7 @@ export class Initiator {
     // this.globalObjectInstance.renderer.shadowMap.enabled = true;
     this.globalObjectInstance.elementContainer.appendChild(this.globalObjectInstance.renderer.domElement);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.boxesGroup);
+    this.globalObjectInstance.scene.add(this.globalObjectInstance.linesGroup);
     this.globalObjectInstance.renderer.xr.enabled = true;
 
 
@@ -291,23 +276,17 @@ export class Initiator {
 
     this.initStereoImage()
 
-
-
-
-
   }
+
 
   initStereoImage() {
 
     this.globalObjectInstance.camera.layers.enable(1); // render left view when no stereo available
 
 
-    
-
     const texture = new THREE.TextureLoader().load('../../testImages/PIC_20230315_Stereo_Right_Eye_on_Top.jpg');
     const texture2 = new THREE.TextureLoader().load('../../testImages/PIC_20230315_Stereo_Right_Eye_on_Top.jpg');
 
-    
 
     texture.repeat = new THREE.Vector2(1, 0.5);
 
@@ -317,16 +296,15 @@ export class Initiator {
     texture2.offset = new THREE.Vector2(0, 0.5);
 
 
-
     //take only lower half of the video
     this.globalObjectInstance.scene.background = new THREE.Color(0x101010);
 
+    
     // left
 
     const geometry1 = new THREE.SphereGeometry(500, 60, 40);
     // invert the geometry on the x-axis so that all of the faces point inward
     geometry1.scale(- 1, 1, 1);
-
 
     const material1 = new THREE.MeshBasicMaterial({ map: texture });
 
@@ -335,11 +313,11 @@ export class Initiator {
     mesh1.layers.set(1); // display in left eye only
     this.globalObjectInstance.scene.add(mesh1);
 
+
     // right
 
     const geometry2 = new THREE.SphereGeometry(500, 60, 40);
     geometry2.scale(- 1, 1, 1);
-
 
     const material2 = new THREE.MeshBasicMaterial({ map: texture2 });
 
@@ -348,8 +326,6 @@ export class Initiator {
     mesh2.layers.set(2); // display in right eye only
     this.globalObjectInstance.scene.add(mesh2);
 
-
-  
   }
 
 
@@ -363,20 +339,13 @@ export class Initiator {
       this.globalObjectInstance.boxesGroup.attach(object);
       controller.userData.selected = undefined;
     }
+
   }
 
 
   onSelectStartLeft(event) {
-    //console.log('event:', event);
-    let controllerLeft = event.target;
-    //console.log('event.target:', controller);
-    //console.log('hand1:', this.globalObjectInstance.hand1);
-    //console.log('hand1:', this.globalObjectInstance.hand1['index_finger-tip']);
-    
-    
-    //console.log(controllerLeft.joints)
 
-    //let collision = false;
+    let controllerLeft = event.target;
 
     let intersections = this.animator.getIntersections(controllerLeft);
 
@@ -396,6 +365,7 @@ export class Initiator {
     controller.attach(object);
 
     controller.userData.selected = object;
+
   }
 
   createNewBoxes(controllerLeft) {
@@ -413,9 +383,6 @@ export class Initiator {
     let boxLeft = new THREE.Mesh(geometry_Box, material_Box);
     let boxRight = new THREE.Mesh(geometry_Box, material_Box);
 
-    //boxLeft.geometry.computeBoundingSphere();
-    //boxRight.geometry.computeBoundingSphere();
-
     boxLeft.userData.other_Box = boxRight;
     boxRight.userData.other_Box = boxLeft;
 
@@ -431,7 +398,6 @@ export class Initiator {
 
     if (f) {
       const indexTip = this.globalObjectInstance.hand2['index-finger-tip']; 
-      console.log('Index-Tip right:', indexTip);
       //const indexTip = controller.joints['index-finger-tip'];
       boxRight.position.copy(indexTip.position);
       boxRight.quaternion.copy(indexTip.quaternion);
@@ -440,17 +406,40 @@ export class Initiator {
       boxRight.position.set(controllerRight.position.x, controllerRight.position.y, controllerRight.position.z);
       boxRight.quaternion.copy(controllerRight.quaternion);
     }
+    /*
+    const points = [];
+    points.push(boxLeft.position);
+    points.push(boxRight.position)
+    */
+    let lineGeometry = new THREE.BufferGeometry();
+    lineGeometry.setFromPoints([boxLeft.position, boxRight.position]);
+    let lineMaterial = new THREE.LineBasicMaterial({
+      color: 0xffffff
+    });
+    let line = new THREE.Line(lineGeometry, lineMaterial);
+
+    line.userData.geometry = line.geometry;
+
+    boxLeft.userData.thisLine = line;
+    boxRight.userData.thisLine = line;
+
+    line.userData.boxLeft = boxLeft;
+    line.userData.boxRight = boxRight;
+
+    let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
+    let text = `Distance: ${distance}`;
+    let distanceText = createText(text, 0.05);
+    distanceText.position.set(boxLeft.position.x, boxLeft.position.y + boxSize*2, boxLeft.position.z);
+    this.globalObjectInstance.scene.add(distanceText);
     
+
+    line.userData.distanceText = distanceText;
     
-  
-    //spawn_Box.geometry.computeBoundingSphere();
-  
-    //spheres.push(spawn_Box);
+    this.globalObjectInstance.linesGroup.add(line);
+    //this.globalObjectInstance.scene.add(line);
 
     boxLeft.add(new THREE.AxesHelper(0.03));
     boxRight.add(new THREE.AxesHelper(0.03));
-
-
 
     this.globalObjectInstance.boxesGroup.add(boxLeft);
     this.globalObjectInstance.boxesGroup.add(boxRight);
@@ -459,28 +448,6 @@ export class Initiator {
     //this.globalObjectInstance.scene.add(boxRight);
     
   }
-
-
-
-
-
-  /*
-  collideObject(controller) {
-    let boxesArr = this.globalObjectInstance.boxesArr;
-    boxesArr.forEach((boxes) => {
-      boxes.forEach((box) =>{
-        
-        const distance = controller.position.distanceTo(box.position);
-        console.log('distance:', distance)
-        if (distance < box.geometry.boundingBox.radius) {
-          return box;
-        };
-
-      });
-    });
-    return null;
-  } */
-
 
 }
 
