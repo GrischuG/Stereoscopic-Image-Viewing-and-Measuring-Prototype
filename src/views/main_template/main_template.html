@@ -1,0 +1,14 @@
+<template>
+
+
+  <div id="wrapper" style="width: inherit; height: inherit;">
+
+    <compose view-model="../left_nav/left_nav" model.bind="data" class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0" style="height: 100%;"></compose>
+    <compose view-model="../middle_body/middle_body" model.bind="data" class="d-flex flex-column container-fluid min-100 d-flex flex-column" id="content-wrapper" style="padding: 0;"></compose>
+    <compose view-model="../right_nav/right_nav" model.bind="data" class="navbar navbar-dark align-items-start sidebar sidebar-dark accordion bg-gradient-primary p-0" style="height: 100%;"></compose>
+
+</div>
+
+
+
+</template>

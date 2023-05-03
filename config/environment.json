@@ -1,0 +1,32 @@
+{
+  "development": {
+    "debug": true,
+    "testing": true,
+    "mock": false,
+    "api": {
+      "ssl": true,
+      "host": "localhost:8001",
+      "apiBase": "/"
+    }
+  },
+  "mock": {
+    "debug": true,
+    "testing": true,
+    "mock": true,
+    "api": {
+      "ssl": false,
+      "host": "localhost:3000",
+      "apiBase": "/"
+    }
+  },
+  "production": {
+    "debug": false,
+    "testing": false,
+    "mock": false,
+    "api": {
+      "ssl": false,
+      "host": "51.15.233.22:8000",
+      "apiBase": "/"
+    }
+  }
+}

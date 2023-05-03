@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "module": "amd",
+    "moduleResolution": "node",
+    "target": "es5",
+    "allowSyntheticDefaultImports": true,
+    "outDir": "dist/test",
+    "sourceMap": true,
+    "declaration": true,
+    "stripInternal": true,
+    "noImplicitAny": false,
+    "removeComments": true,
+    "noEmitOnError": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "preserveConstEnums": true,
+    "lib": ["es2017", "dom"]
+  },
+  "exclude": [
+    ".vscode",
+    "node_modules",
+    "dist",
+    "examples"
+  ],
+  "compileOnSave": false,
+  "atom": {
+    "rewriteTsconfig": false
+  }
+}
