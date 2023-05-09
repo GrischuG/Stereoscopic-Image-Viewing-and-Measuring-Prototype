@@ -52,7 +52,9 @@ export class Initiator {
 
     this.globalObjectInstance.controller1 = renderer.xr.getController(0); 
     this.globalObjectInstance.controller2 = renderer.xr.getController(1);
-    
+    this.globalObjectInstance.controller1.userData.other_Controller = this.globalObjectInstance.controller2;
+    this.globalObjectInstance.controller2.userData.other_Controller = this.globalObjectInstance.controller1;
+
     this.globalObjectInstance.controllerGrip1 = renderer.xr.getControllerGrip(0); 
     this.globalObjectInstance.controllerGrip2 = renderer.xr.getControllerGrip(1);;
     
@@ -125,6 +127,9 @@ export class Initiator {
     // Add event listeners to controllers to detect input
     controller1.addEventListener('selectstart', this.onSelectStartLeft.bind(this));
     controller1.addEventListener('selectend', this.onSelectEnd.bind(this));
+
+    controller2.addEventListener('selectstart', this.onSelectStartLeft.bind(this));
+    controller2.addEventListener('selectend', this.onSelectEnd.bind(this));
 
     //controller2.addEventListener('selectstart', this.onSelectStartLeft.bind(this));
 
@@ -249,6 +254,7 @@ export class Initiator {
     this.globalObjectInstance.elementContainer.appendChild(this.globalObjectInstance.renderer.domElement);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.boxesGroup);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.linesGroup);
+    this.globalObjectInstance.scene.add(this.globalObjectInstance.distTexts);
     this.globalObjectInstance.renderer.xr.enabled = true;
 
 
@@ -335,24 +341,39 @@ export class Initiator {
     if (controller.userData.selected !== undefined) {
       const object = controller.userData.selected;
       object.material.emissive.b = 0;
-      object.userData.other_Box.material.emissive.b = 0;
+      //object.userData.other_Box.material.emissive.b = 0;
+      //this.globalObjectInstance.attached.remove(object);
       this.globalObjectInstance.boxesGroup.attach(object);
       controller.userData.selected = undefined;
+      this.updateLines();
     }
 
   }
 
-
-  onSelectStartLeft(event) {
-
+  /*
+  onSelectStartRight(event) {
     let controllerLeft = event.target;
 
     let intersections = this.animator.getIntersections(controllerLeft);
 
     if (intersections.length > 0) {
       this.setIntersection(controllerLeft, intersections);
+    }
+  }
+  */
+
+  onSelectStartLeft(event) {
+
+    let controller = event.target;
+
+    let intersections = this.animator.getIntersections(controller);
+
+    if (intersections.length > 0) {
+      this.setIntersection(controller, intersections);
     } else {
-      this.createNewBoxes(controllerLeft);
+      if (!this.globalObjectInstance.boxesCreated) {
+        this.createNewBoxes(controller);
+      }
     }
     
   }
@@ -362,13 +383,14 @@ export class Initiator {
     const object = intersection.object;
     object.material.emissive.b = 1;
     //object.userData.other_Box.material.emissive.b = 1;
+    //this.globalObjectInstance.attached.add(object);
     controller.attach(object);
-
+    
     controller.userData.selected = object;
 
   }
 
-  createNewBoxes(controllerLeft) {
+  createNewBoxes(controller) {
     const boxSize = this.globalObjectInstance.boxSize; 
 
     let geometry_Box = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
@@ -386,25 +408,25 @@ export class Initiator {
     boxLeft.userData.other_Box = boxRight;
     boxRight.userData.other_Box = boxLeft;
 
-    let f = false;
-    if (f) {
-      const indexTip = controllerLeft.joints['index-finger-tip'];
+    let useHands = false;
+    if (useHands) {
+      const indexTip = controller.joints['index-finger-tip'];
       boxLeft.position.copy(indexTip.position);
       boxLeft.quaternion.copy(indexTip.quaternion);
     } else {
-      boxLeft.position.set(controllerLeft.position.x, controllerLeft.position.y, controllerLeft.position.z);
-      boxLeft.quaternion.copy(controllerLeft.quaternion);
+      boxLeft.position.set(controller.position.x, controller.position.y, controller.position.z);
+      boxLeft.quaternion.copy(controller.quaternion);
     }
 
-    if (f) {
+    if (useHands) {
       const indexTip = this.globalObjectInstance.hand2['index-finger-tip']; 
       //const indexTip = controller.joints['index-finger-tip'];
       boxRight.position.copy(indexTip.position);
       boxRight.quaternion.copy(indexTip.quaternion);
     } else {
-      let controllerRight = this.globalObjectInstance.controller2;
-      boxRight.position.set(controllerRight.position.x, controllerRight.position.y, controllerRight.position.z);
-      boxRight.quaternion.copy(controllerRight.quaternion);
+      let othercontroller = controller.userData.other_Controller;
+      boxRight.position.set(othercontroller.position.x, othercontroller.position.y, othercontroller.position.z);
+      boxRight.quaternion.copy(othercontroller.quaternion);
     }
     /*
     const points = [];
@@ -425,17 +447,23 @@ export class Initiator {
 
     line.userData.boxLeft = boxLeft;
     line.userData.boxRight = boxRight;
-
+    
     let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
     let text = `Distance: ${distance}`;
     let distanceText = createText(text, 0.05);
     distanceText.position.set(boxLeft.position.x, boxLeft.position.y + boxSize*2, boxLeft.position.z);
-    this.globalObjectInstance.scene.add(distanceText);
+    distanceText.lookAt(this.globalObjectInstance.camera.position);
+    line.userData.distanceText = distanceText;
+
+    this.globalObjectInstance.distTexts.add(distanceText);
+    //this.globalObjectInstance.scene.add(distanceText);
     
 
-    line.userData.distanceText = distanceText;
     
     this.globalObjectInstance.linesGroup.add(line);
+    
+    
+    
     //this.globalObjectInstance.scene.add(line);
 
     boxLeft.add(new THREE.AxesHelper(0.03));
@@ -443,10 +471,76 @@ export class Initiator {
 
     this.globalObjectInstance.boxesGroup.add(boxLeft);
     this.globalObjectInstance.boxesGroup.add(boxRight);
+
+    this.globalObjectInstance.boxesCreated = true;
     
     //this.globalObjectInstance.scene.add(boxLeft);
     //this.globalObjectInstance.scene.add(boxRight);
     
+  }
+
+  updateLines() {
+    
+    
+    let lines = this.globalObjectInstance.linesGroup.children;
+
+    lines.forEach(line => {
+      
+      let boxLeft = line.userData.boxLeft;
+      let boxRight = line.userData.boxRight;
+      
+      line.userData.geometry.setFromPoints([boxLeft.position, boxRight.position]);
+      
+      this.globalObjectInstance.distTexts.remove(line.userData.distanceText);
+
+      let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
+      let text = `Distance: ${distance}`;
+      let distanceText = createText(text, 0.05);
+      distanceText.position.set(boxLeft.position.x, boxLeft.position.y + this.globalObjectInstance.boxSize*2, boxLeft.position.z);
+      distanceText.lookAt(this.globalObjectInstance.camera.position);
+      this.globalObjectInstance.distTexts.add(distanceText);
+    
+      line.userData.distanceText = distanceText;
+    });
+  
+
+    /*
+    if (this.globalObjectInstance.attached) {
+
+      let controllers = [this.globalObjectInstance.controller1, this.globalObjectInstance.controller2];
+
+      controllers.forEach(controller => {
+        if (controller.userData.selected !== undefined) {
+          let box = controller.userData.selected;
+          let line = this.globalObjectInstance.linesGroup.getObjectById(box.userData.line.id);
+          let otherBox = line.userData.other_Box;
+          line.userData.geometry.setFromPoints([box.position, otherBox.position]);
+        }
+      });
+    }*/
+
+    
+    /*
+    let attached = this.globalObjectInstance.attached.children;
+
+    attached.forEach(box => {
+      let line = box.userData.line;
+      let otherBox = line.userData.other_Box;
+      line.userData.geometry.setFromPoints([box.position, otherBox.position]);
+    });*/
+
+
+    
+      
+      /*
+      let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
+      let text = `Distance: ${distance}`;
+      let distanceText = createText(text, 0.05);
+      distanceText.position.set(boxLeft.position.x, boxLeft.position.y + boxSize*2, boxLeft.position.z);
+      
+      line.userData.distanceText = distanceText; 
+      
+    });*/
   }
 
 }

@@ -2,6 +2,7 @@
 import { autoinject, singleton } from 'aurelia-framework';
 import { GlobalDefinition } from './global_definitions';
 import * as THREE from 'three';
+import { createText } from 'three/examples/jsm/webxr/Text2D.js';
 
 @singleton()
 @autoinject()
@@ -15,55 +16,51 @@ export class Animator {
     this.tempMatrix = new THREE.Matrix4();
   }
 
+
+  /**
+   * Animation loop: 
+   *      -> clears global intersected variable  
+   *      -> calls 'intersectObjects()'-method with both controllers
+   */
   async animate() {
 
-
     this.clearIntersected();
-    //console.log('After CLean Intersect');
 
     this.intersectObjects(this.globalObjectInstance.controller1);
     this.intersectObjects(this.globalObjectInstance.controller2);
-    //console.log('After intersect Object with controllers');
-
-    this.updateLines();
     
     this.globalObjectInstance.renderer.render(this.globalObjectInstance.scene, this.globalObjectInstance.camera);
 
   }
 
-  
-  updateLines() {
-    let lines = this.globalObjectInstance.linesGroup.children;
 
-    lines.forEach(line => {
-      let boxLeft = line.userData.boxLeft;
-      let boxRight = line.userData.boxRight;
-      
-      line.userData.geometry.setFromPoints([boxLeft.position, boxRight.position]);
-      
-      /*
-      let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
-      let text = `Distance: ${distance}`;
-      let distanceText = createText(text, 0.05);
-      distanceText.position.set(boxLeft.position.x, boxLeft.position.y + boxSize*2, boxLeft.position.z);
-      
-      line.userData.distanceText = distanceText; 
-      */
-    });
-  }
-
+  /**
+   * Returns an array of intersections between the raycaster's ray and the boxes in boxesGroup.
+   * 
+   * @param controller 
+   * @returns array of intersected boxes
+   */
   getIntersections(controller) {
 
     let raycaster = this.globalObjectInstance.raycaster;
 
+    // Gets rotation (direction) of controller position
     this.tempMatrix.identity().extractRotation(controller.matrixWorld);
 
+    // Casts raycaster ray away from controller
     raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
     raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
     return raycaster.intersectObjects(this.globalObjectInstance.boxesGroup.children, false);
 
   }
 
+  /**
+   * If intersected objects are found, this function hights the first object in the array by setting the emissive variable 'r' to 1. 
+   * Additionally, the length of the line coming from the controller is set to the distance to the intersected object and pushes the object to the global 'intersected' array.
+   * 
+   * @param controller 
+   * @returns 
+   */
   intersectObjects(controller) {
     if (controller.userData.selected !== undefined) return;
 
@@ -84,7 +81,9 @@ export class Animator {
     }
   }
 
-
+  /**
+   * Clears the global intersected array and sets the contained object's emissive variable 'r' to 0.
+   */
   clearIntersected() {
 
     let intersected = this.globalObjectInstance.intersected;
