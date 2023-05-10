@@ -29,6 +29,7 @@ export class Animator {
     this.intersectObjects(this.globalObjectInstance.controller1);
     this.intersectObjects(this.globalObjectInstance.controller2);
     
+    //this.globalObjectInstance.camera.position.set(0,0,0);
     this.globalObjectInstance.renderer.render(this.globalObjectInstance.scene, this.globalObjectInstance.camera);
 
   }

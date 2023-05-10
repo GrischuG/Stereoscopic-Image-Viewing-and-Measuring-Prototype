@@ -125,13 +125,11 @@ export class Initiator {
     this.globalObjectInstance.scene.add(controllerGrip2);
 
     // Add event listeners to controllers to detect input
-    controller1.addEventListener('selectstart', this.onSelectStartLeft.bind(this));
+    controller1.addEventListener('selectstart', this.onSelectStart.bind(this));
     controller1.addEventListener('selectend', this.onSelectEnd.bind(this));
 
-    controller2.addEventListener('selectstart', this.onSelectStartLeft.bind(this));
+    controller2.addEventListener('selectstart', this.onSelectStart.bind(this));
     controller2.addEventListener('selectend', this.onSelectEnd.bind(this));
-
-    //controller2.addEventListener('selectstart', this.onSelectStartLeft.bind(this));
 
 
     // get hand left (0)
@@ -229,8 +227,6 @@ export class Initiator {
       box0.add(axesHelper);
 
       this.globalObjectInstance.boxesGroup.add(box0);
-
-      //this.globalObjectInstance.scene.add(box0);
     }
 
     
@@ -245,17 +241,18 @@ export class Initiator {
   async sceneInit() {
 
     console.log('init scene');
-
+    
     this.globalObjectInstance.elementContainer = document.getElementById('container');
     this.globalObjectInstance.camera.aspect = this.globalObjectInstance.elementContainer.clientWidth / this.globalObjectInstance.elementContainer.clientHeight;
     this.globalObjectInstance.camera.updateProjectionMatrix();
+    this.globalObjectInstance.renderer.xr.enabled = true;
     this.globalObjectInstance.renderer.setSize(this.globalObjectInstance.elementContainer.clientWidth, this.globalObjectInstance.elementContainer.clientHeight);
     // this.globalObjectInstance.renderer.shadowMap.enabled = true;
     this.globalObjectInstance.elementContainer.appendChild(this.globalObjectInstance.renderer.domElement);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.boxesGroup);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.linesGroup);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.distTexts);
-    this.globalObjectInstance.renderer.xr.enabled = true;
+    
 
 
     //added for VR support
@@ -265,14 +262,6 @@ export class Initiator {
 
     //add directional light at camera position
     const dLight = new THREE.DirectionalLight(0xffffff, 1);
-    dLight.position.set(this.globalObjectInstance.camera.position.x, this.globalObjectInstance.camera.position.y + 0.1, this.globalObjectInstance.camera.position.z);
-    // dLight.position.set(0, 6, 0);
-    // dLight.castShadow  = true;
-    // dLight.shadow.camera.top = 2;
-    // dLight.shadow.camera.bottom = -2;
-    // dLight.shadow.camera.right = 2;
-    // dLight.shadow.camera.left = -2;
-    // dLight.shadow.mapSize.set(4096, 4096);
     this.globalObjectInstance.scene.add(dLight);
 
     //add hemisphere light
@@ -290,8 +279,8 @@ export class Initiator {
     this.globalObjectInstance.camera.layers.enable(1); // render left view when no stereo available
 
 
-    const texture = new THREE.TextureLoader().load('../../testImages/PIC_20230315_Stereo_Right_Eye_on_Top.jpg');
-    const texture2 = new THREE.TextureLoader().load('../../testImages/PIC_20230315_Stereo_Right_Eye_on_Top.jpg');
+    const texture = new THREE.TextureLoader().load('../../testImages/Test_Image_02.jpg');
+    const texture2 = new THREE.TextureLoader().load('../../testImages/Test_Image_02.jpg');
 
 
     texture.repeat = new THREE.Vector2(1, 0.5);
@@ -342,7 +331,6 @@ export class Initiator {
       const object = controller.userData.selected;
       object.material.emissive.b = 0;
       //object.userData.other_Box.material.emissive.b = 0;
-      //this.globalObjectInstance.attached.remove(object);
       this.globalObjectInstance.boxesGroup.attach(object);
       controller.userData.selected = undefined;
       this.updateLines();
@@ -350,19 +338,7 @@ export class Initiator {
 
   }
 
-  /*
-  onSelectStartRight(event) {
-    let controllerLeft = event.target;
-
-    let intersections = this.animator.getIntersections(controllerLeft);
-
-    if (intersections.length > 0) {
-      this.setIntersection(controllerLeft, intersections);
-    }
-  }
-  */
-
-  onSelectStartLeft(event) {
+  onSelectStart(event) {
 
     let controller = event.target;
 
@@ -383,7 +359,6 @@ export class Initiator {
     const object = intersection.object;
     object.material.emissive.b = 1;
     //object.userData.other_Box.material.emissive.b = 1;
-    //this.globalObjectInstance.attached.add(object);
     controller.attach(object);
     
     controller.userData.selected = object;
@@ -420,7 +395,6 @@ export class Initiator {
 
     if (useHands) {
       const indexTip = this.globalObjectInstance.hand2['index-finger-tip']; 
-      //const indexTip = controller.joints['index-finger-tip'];
       boxRight.position.copy(indexTip.position);
       boxRight.quaternion.copy(indexTip.quaternion);
     } else {
@@ -428,11 +402,7 @@ export class Initiator {
       boxRight.position.set(othercontroller.position.x, othercontroller.position.y, othercontroller.position.z);
       boxRight.quaternion.copy(othercontroller.quaternion);
     }
-    /*
-    const points = [];
-    points.push(boxLeft.position);
-    points.push(boxRight.position)
-    */
+
     let lineGeometry = new THREE.BufferGeometry();
     lineGeometry.setFromPoints([boxLeft.position, boxRight.position]);
     let lineMaterial = new THREE.LineBasicMaterial({
@@ -456,15 +426,8 @@ export class Initiator {
     line.userData.distanceText = distanceText;
 
     this.globalObjectInstance.distTexts.add(distanceText);
-    //this.globalObjectInstance.scene.add(distanceText);
-    
-
     
     this.globalObjectInstance.linesGroup.add(line);
-    
-    
-    
-    //this.globalObjectInstance.scene.add(line);
 
     boxLeft.add(new THREE.AxesHelper(0.03));
     boxRight.add(new THREE.AxesHelper(0.03));
@@ -473,9 +436,6 @@ export class Initiator {
     this.globalObjectInstance.boxesGroup.add(boxRight);
 
     this.globalObjectInstance.boxesCreated = true;
-    
-    //this.globalObjectInstance.scene.add(boxLeft);
-    //this.globalObjectInstance.scene.add(boxRight);
     
   }
 
@@ -503,44 +463,6 @@ export class Initiator {
       line.userData.distanceText = distanceText;
     });
   
-
-    /*
-    if (this.globalObjectInstance.attached) {
-
-      let controllers = [this.globalObjectInstance.controller1, this.globalObjectInstance.controller2];
-
-      controllers.forEach(controller => {
-        if (controller.userData.selected !== undefined) {
-          let box = controller.userData.selected;
-          let line = this.globalObjectInstance.linesGroup.getObjectById(box.userData.line.id);
-          let otherBox = line.userData.other_Box;
-          line.userData.geometry.setFromPoints([box.position, otherBox.position]);
-        }
-      });
-    }*/
-
-    
-    /*
-    let attached = this.globalObjectInstance.attached.children;
-
-    attached.forEach(box => {
-      let line = box.userData.line;
-      let otherBox = line.userData.other_Box;
-      line.userData.geometry.setFromPoints([box.position, otherBox.position]);
-    });*/
-
-
-    
-      
-      /*
-      let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
-      let text = `Distance: ${distance}`;
-      let distanceText = createText(text, 0.05);
-      distanceText.position.set(boxLeft.position.x, boxLeft.position.y + boxSize*2, boxLeft.position.z);
-      
-      line.userData.distanceText = distanceText; 
-      
-    });*/
   }
 
 }
