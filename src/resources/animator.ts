@@ -2,7 +2,6 @@
 import { autoinject, singleton } from 'aurelia-framework';
 import { GlobalDefinition } from './global_definitions';
 import * as THREE from 'three';
-import { createText } from 'three/examples/jsm/webxr/Text2D.js';
 
 @singleton()
 @autoinject()
@@ -19,8 +18,9 @@ export class Animator {
 
   /**
    * Animation loop: 
-   *      -> clears global intersected variable  
-   *      -> calls 'intersectObjects()'-method with both controllers
+   *      clears global intersected variable,
+   *      calls 'intersectObjects()'-method with both controllers, 
+   *      and calls the render method to render the ThreeJS VR enviromnet
    */
   async animate() {
 
@@ -28,8 +28,7 @@ export class Animator {
 
     this.intersectObjects(this.globalObjectInstance.controller1);
     this.intersectObjects(this.globalObjectInstance.controller2);
-    
-    //this.globalObjectInstance.camera.position.set(0,0,0);
+
     this.globalObjectInstance.renderer.render(this.globalObjectInstance.scene, this.globalObjectInstance.camera);
 
   }
@@ -72,7 +71,6 @@ export class Animator {
       const intersection = intersections[0];
       const object = intersection.object;
       object.material.emissive.r = 1;
-      //object.userData.other_Box.material.emissive.r = 1;
       this.globalObjectInstance.intersected.push(object);
 
       line.scale.z = intersection.distance;
@@ -92,8 +90,30 @@ export class Animator {
     while (intersected.length) {
       const object = intersected.pop();
       object.material.emissive.r = 0;
-      //object.userData.other_Box.material.emissive.r = 0;
     }
   }
 
 }
+
+
+
+
+
+
+/*
+    if (this.globalObjectInstance.sessionStarted) {
+    
+      //const baseReferenceSpace = this.globalObjectInstance.renderer.xr.getReferenceSpace();
+      console.log("ReferenceSpace: ", this.globalObjectInstance.baseReferenceSpace);
+
+      const offsetPosition = {x: 0, y: 0, z: 0, w: 1 };
+      console.log("offsetPosition: ", offsetPosition);
+      const offsetRotation = new THREE.Quaternion();
+      //console.log("offsetRotation: ", offsetRotation);
+      const transform = new XRRigidTransform(offsetPosition, offsetRotation);
+      console.log("transform: ", transform);
+      const offset = this.globalObjectInstance.baseReferenceSpace.getOffsetReferenceSpace(transform);
+      
+      this.globalObjectInstance.renderer.xr.setReferenceSpace(offset);
+    }
+    */

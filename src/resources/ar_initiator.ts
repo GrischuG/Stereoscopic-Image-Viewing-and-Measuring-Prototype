@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { GlobalDefinition } from './global_definitions';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton';
 //import { XRPose, XRReferenceSpace } from 'three'; Not working in version 0.150.0, working in version 0.135.0. I don't know why, but it is nt impoortant for now
-import { ThreeCanvas } from 'views/three_canvas/three_canvas';
+//import { ThreeCanvas } from 'views/three_canvas/three_canvas';
 
 
 @singleton()

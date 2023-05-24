@@ -1,11 +1,9 @@
 import { singleton, autoinject } from 'aurelia-framework';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GlobalDefinition } from "./global_definitions";
 import { ArInitiator } from './ar_initiator';
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory.js';
 import { XRHandModelFactory } from 'three/examples/jsm/webxr/XRHandModelFactory.js';
-import { on } from 'events';
 import { Animator } from './animator';
 import { createText } from 'three/examples/jsm/webxr/Text2D.js';
 
@@ -39,13 +37,18 @@ export class Initiator {
     }, 1000);
   }
 
-
+  /**
+   * 
+   */
   async initDomObjectElements() {
     // event on pointermove call updateMousePosText
     console.log('init DomElementObjects to globalObject')
     await this.setElementsById('container', this.globalObjectInstance, 'elementContainer')
   }
 
+  /**
+   * 
+   */
   async controlsInit() {
 
     const renderer = this.globalObjectInstance.renderer;
@@ -66,14 +69,11 @@ export class Initiator {
     
   }
 
-  
-
+  /**
+   * 
+   */
   async setupControls() {
 
-    //-------------------------------
-    //set up controls
-    //-------------------------------
-    
     const controller1 = this.globalObjectInstance.controller1;
     const controller2 = this.globalObjectInstance.controller2;
 
@@ -83,16 +83,7 @@ export class Initiator {
     const hand1 = this.globalObjectInstance.hand1;
     const hand2 = this.globalObjectInstance.hand2;
 
-    const tmpVector1 = new THREE.Vector3();
-		const tmpVector2 = new THREE.Vector3();
-
-    const handModels = {
-      left: null,
-      right: null
-    };
-
-
-    //orbit controls to move camera
+    //orbit controls
     this.globalObjectInstance.orbitControls.target = new THREE.Vector3(0, 0, 0);
     
 
@@ -104,16 +95,12 @@ export class Initiator {
 
 
     // controllers
-  
     this.globalObjectInstance.scene.add(controller1)
-
     this.globalObjectInstance.scene.add(controller2)
 
     const controllerModelFactory = new XRControllerModelFactory();
 		const handModelFactory = new XRHandModelFactory();
 
-
-    // hand 1
 
     // get controller left (0)
     controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
@@ -132,66 +119,13 @@ export class Initiator {
     controller2.addEventListener('selectend', this.onSelectEnd.bind(this));
 
 
-    // get hand left (0)
-    hand1.userData.currentHandModel = 0;
+    // hand 1
+    hand1.add(handModelFactory.createHandModel(hand1, 'mesh'));
     this.globalObjectInstance.scene.add(hand1);
-    
-    let changeHandModels = false;
-    // change hand models seen in VR by pinching fingers if changeHandModels variable is set to 'true'
-    if (changeHandModels) {
-      handModels.left = [
-      handModelFactory.createHandModel(hand1, 'boxes'),
-			handModelFactory.createHandModel(hand1, 'spheres'),
-      handModelFactory.createHandModel(hand1, 'mesh'), 
-			
-      ];
-
-      for (let i = 0; i < 3; i++) {
-        const model = handModels.left[i];
-        model.visible = i == 0;
-        hand1.add(model);
-      }
-
-      hand1.addEventListener('selectstart', function() {
-        handModels.left[this.userData.currentHandModel].visible = false;
-        this.userData.currentHandModel = (this.userData.currentHandModel + 1) % 3;
-        handModels.left[this.userData.currentHandModel].visible = true;
-      } );
-
-    } else {
-      hand1.add(handModelFactory.createHandModel(hand1, 'mesh'));
-    }
-
 
     // hand 2
-
-    // get hand right (1)
-    hand2.userData.currentHandModel = 1;
+    hand2.add(handModelFactory.createHandModel(hand2, 'mesh')); 
     this.globalObjectInstance.scene.add(hand2);
-    
-    // change hand models seen in VR by pinching fingers if changeHandModels variable is set to 'true'
-    if (changeHandModels) {
-      handModels.right = [
-      handModelFactory.createHandModel(hand2, 'boxes'),
-			handModelFactory.createHandModel(hand2, 'spheres'),
-      handModelFactory.createHandModel(hand2, 'mesh')			
-      ];
-
-      for (let i = 0; i < 3; i++) {
-        const model = handModels.right[i];
-        model.visible = i == 0;
-        hand2.add(model);
-      }
-
-      hand2.addEventListener('selectstart', function() {
-        handModels.right[this.userData.currentHandModel].visible = false;
-        this.userData.currentHandModel = (this.userData.currentHandModel + 1) % 3;
-        handModels.right[this.userData.currentHandModel].visible = true;
-      } );
-
-    } else {
-      hand2.add(handModelFactory.createHandModel(hand2, 'mesh')); 
-    }
 
 
     // create lines pointing away from controller in VR
@@ -207,54 +141,34 @@ export class Initiator {
     hand1.add(line.clone());
     hand2.add(line.clone());
 
-
-    const enableSampleBox = false;
-
-    if (enableSampleBox) {
-      const geometry_Box0 = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-      const material_Box0 = new THREE.MeshStandardMaterial( {
-        color: 0xffff00,
-        roughness: 1.0,
-        metalness: 0.0,
-        transparent: true,
-        opacity: 0.5
-      } );
-      const box0 = new THREE.Mesh(geometry_Box0, material_Box0);
-
-      box0.position.set(0, 1, -1);
-
-      const axesHelper = new THREE.AxesHelper(0.3);
-      box0.add(axesHelper);
-
-      this.globalObjectInstance.boxesGroup.add(box0);
-    }
-
-    
-      
-		//
-  
     console.log('Setup Controlls Finished');
 
   }
 
 
+  /**
+   * 
+   */
   async sceneInit() {
 
     console.log('init scene');
     
+    this.globalObjectInstance.renderer.xr.addEventListener('sessionstart', () => {
+      this.globalObjectInstance.sessionStarted = true;
+    });
+    
     this.globalObjectInstance.elementContainer = document.getElementById('container');
-    this.globalObjectInstance.camera.aspect = this.globalObjectInstance.elementContainer.clientWidth / this.globalObjectInstance.elementContainer.clientHeight;
-    this.globalObjectInstance.camera.updateProjectionMatrix();
+    //this.globalObjectInstance.camera.aspect = this.globalObjectInstance.elementContainer.clientWidth / this.globalObjectInstance.elementContainer.clientHeight;
+    //this.globalObjectInstance.camera.updateProjectionMatrix();
     this.globalObjectInstance.renderer.xr.enabled = true;
     this.globalObjectInstance.renderer.setSize(this.globalObjectInstance.elementContainer.clientWidth, this.globalObjectInstance.elementContainer.clientHeight);
-    // this.globalObjectInstance.renderer.shadowMap.enabled = true;
     this.globalObjectInstance.elementContainer.appendChild(this.globalObjectInstance.renderer.domElement);
+
     this.globalObjectInstance.scene.add(this.globalObjectInstance.boxesGroup);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.linesGroup);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.distTexts);
     
-
-
+    
     //added for VR support
     // we set the animation loop that is always called.
     //we bind .this since a callback has a higher order function
@@ -274,13 +188,17 @@ export class Initiator {
   }
 
 
+/**
+ * 
+ */
   initStereoImage() {
 
     this.globalObjectInstance.camera.layers.enable(1); // render left view when no stereo available
 
-
-    const texture = new THREE.TextureLoader().load('../../testImages/Test_Image_02.jpg');
-    const texture2 = new THREE.TextureLoader().load('../../testImages/Test_Image_02.jpg');
+    // --------------- IMPORTANT! --------------- //
+    // Use 'Right Eye on Top' mode for stitching! //
+    const texture = new THREE.TextureLoader().load('../../testImages/Distance_181_02.jpg');
+    const texture2 = new THREE.TextureLoader().load('../../testImages/Distance_181_02.jpg');
 
 
     texture.repeat = new THREE.Vector2(1, 0.5);
@@ -324,13 +242,16 @@ export class Initiator {
   }
 
 
+  /**
+   * 
+   * @param event 
+   */
   onSelectEnd(event) {
     const controller = event.target;
 
     if (controller.userData.selected !== undefined) {
       const object = controller.userData.selected;
       object.material.emissive.b = 0;
-      //object.userData.other_Box.material.emissive.b = 0;
       this.globalObjectInstance.boxesGroup.attach(object);
       controller.userData.selected = undefined;
       this.updateLines();
@@ -338,6 +259,10 @@ export class Initiator {
 
   }
 
+  /**
+   * 
+   * @param event 
+   */
   onSelectStart(event) {
 
     let controller = event.target;
@@ -354,109 +279,137 @@ export class Initiator {
     
   }
 
+  /**
+   * 
+   * @param controller 
+   * @param intersections 
+   */
   setIntersection(controller, intersections) {
     const intersection = intersections[0];
     const object = intersection.object;
     object.material.emissive.b = 1;
-    //object.userData.other_Box.material.emissive.b = 1;
     controller.attach(object);
     
     controller.userData.selected = object;
 
   }
 
+  /**
+   * 
+   * @param controller 
+   */
   createNewBoxes(controller) {
     const boxSize = this.globalObjectInstance.boxSize; 
 
-    let geometry_Box = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-    let material_Box = new THREE.MeshStandardMaterial( {
+    // Create two new boxes (random color)
+    let geometryBox = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
+    let materialBox = new THREE.MeshStandardMaterial( {
       color: Math.random() * 0xffffff,
       roughness: 1.0,
       metalness: 0.0,
       transparent: true,
-      opacity: 0.5
+      opacity: 0.3
     } );
+    let box01 = new THREE.Mesh(geometryBox, materialBox);
+    let box02 = new THREE.Mesh(geometryBox, materialBox);
 
-    let boxLeft = new THREE.Mesh(geometry_Box, material_Box);
-    let boxRight = new THREE.Mesh(geometry_Box, material_Box);
+    // Save reference to each other in 'userData'
+    box01.userData.other_Box = box02;
+    box02.userData.other_Box = box01;
 
-    boxLeft.userData.other_Box = boxRight;
-    boxRight.userData.other_Box = boxLeft;
+    // Set position an rotation of boxes to respective controller position and rotation
+    box01.position.set(controller.position.x, controller.position.y, controller.position.z);
+    box01.quaternion.copy(controller.quaternion);
+    let otherController = controller.userData.other_Controller;
+    box02.position.set(otherController.position.x, otherController.position.y, otherController.position.z);
+    box02.quaternion.copy(otherController.quaternion);
 
-    let useHands = false;
-    if (useHands) {
-      const indexTip = controller.joints['index-finger-tip'];
-      boxLeft.position.copy(indexTip.position);
-      boxLeft.quaternion.copy(indexTip.quaternion);
-    } else {
-      boxLeft.position.set(controller.position.x, controller.position.y, controller.position.z);
-      boxLeft.quaternion.copy(controller.quaternion);
-    }
+    // Add axes to both boxes to better see their center point
+    box01.add(new THREE.AxesHelper(0.03));
+    box02.add(new THREE.AxesHelper(0.03));
 
-    if (useHands) {
-      const indexTip = this.globalObjectInstance.hand2['index-finger-tip']; 
-      boxRight.position.copy(indexTip.position);
-      boxRight.quaternion.copy(indexTip.quaternion);
-    } else {
-      let othercontroller = controller.userData.other_Controller;
-      boxRight.position.set(othercontroller.position.x, othercontroller.position.y, othercontroller.position.z);
-      boxRight.quaternion.copy(othercontroller.quaternion);
-    }
-
+    // Create a line
     let lineGeometry = new THREE.BufferGeometry();
-    lineGeometry.setFromPoints([boxLeft.position, boxRight.position]);
+    lineGeometry.setFromPoints([box01.position, box02.position]);
     let lineMaterial = new THREE.LineBasicMaterial({
       color: 0xffffff
     });
     let line = new THREE.Line(lineGeometry, lineMaterial);
 
+    // Save reference for line geometry to userData explicitly for use in updateLines()-method
     line.userData.geometry = line.geometry;
 
-    boxLeft.userData.thisLine = line;
-    boxRight.userData.thisLine = line;
+    // Save reference for line to each box
+    box01.userData.thisLine = line;
+    box02.userData.thisLine = line;
 
-    line.userData.boxLeft = boxLeft;
-    line.userData.boxRight = boxRight;
+    // Save reference for both boxes to line
+    line.userData.box01 = box01;
+    line.userData.box02 = box02;
     
-    let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
+
+    
+
+
+
+
+
+    // calculate distance between boxes, create, and display text facing the camera
+    let distance = box01.position.distanceTo(box02.position).toFixed(5);
     let text = `Distance: ${distance}`;
     let distanceText = createText(text, 0.05);
-    distanceText.position.set(boxLeft.position.x, boxLeft.position.y + boxSize*2, boxLeft.position.z);
+    distanceText.position.set(box01.position.x, box01.position.y + boxSize*2, box01.position.z+0.01);
     distanceText.lookAt(this.globalObjectInstance.camera.position);
+    
+    // Save reference to distance text to line
     line.userData.distanceText = distanceText;
 
-    this.globalObjectInstance.distTexts.add(distanceText);
+    //let boundingBox = distanceText.geometry.computeBoundingBox();
+
     
+
+    let backgroundGeom = new THREE.BoxGeometry(0.45, 0.06, 0.001);
+    let backgroundMat = new THREE.MeshPhongMaterial({color: 0xff0000});
+    let textBackground = new THREE.Mesh(backgroundGeom, backgroundMat);
+    textBackground.position.set(distanceText.position.x-0.01, distanceText.position.y-0.01, distanceText.position.z-0.01);
+    // textBackground.rotation.set(distanceText.rotation.x, distanceText.rotation.y, distanceText.rotation.z, distanceText.rotation.order);
+    textBackground.lookAt(this.globalObjectInstance.camera.position);
+    this.globalObjectInstance.scene.add(textBackground);
+
+
+    
+
+    // Add everything to the respective groups
+    this.globalObjectInstance.distTexts.add(distanceText);
     this.globalObjectInstance.linesGroup.add(line);
-
-    boxLeft.add(new THREE.AxesHelper(0.03));
-    boxRight.add(new THREE.AxesHelper(0.03));
-
-    this.globalObjectInstance.boxesGroup.add(boxLeft);
-    this.globalObjectInstance.boxesGroup.add(boxRight);
+    this.globalObjectInstance.boxesGroup.add(box01);
+    this.globalObjectInstance.boxesGroup.add(box02);
 
     this.globalObjectInstance.boxesCreated = true;
     
   }
 
+
+  /**
+   * 
+   */
   updateLines() {
-    
     
     let lines = this.globalObjectInstance.linesGroup.children;
 
     lines.forEach(line => {
       
-      let boxLeft = line.userData.boxLeft;
-      let boxRight = line.userData.boxRight;
+      let box01 = line.userData.box01;
+      let box02 = line.userData.box02;
       
-      line.userData.geometry.setFromPoints([boxLeft.position, boxRight.position]);
+      line.userData.geometry.setFromPoints([box01.position, box02.position]);
       
       this.globalObjectInstance.distTexts.remove(line.userData.distanceText);
 
-      let distance = boxLeft.position.distanceTo(boxRight.position).toFixed(5);
+      let distance = box01.position.distanceTo(box02.position).toFixed(5);
       let text = `Distance: ${distance}`;
       let distanceText = createText(text, 0.05);
-      distanceText.position.set(boxLeft.position.x, boxLeft.position.y + this.globalObjectInstance.boxSize*2, boxLeft.position.z);
+      distanceText.position.set(box01.position.x, box01.position.y + this.globalObjectInstance.boxSize*2, box01.position.z);
       distanceText.lookAt(this.globalObjectInstance.camera.position);
       this.globalObjectInstance.distTexts.add(distanceText);
     
@@ -467,5 +420,29 @@ export class Initiator {
 
 }
 
+/*
+const enableSampleBox = false;
 
+    if (enableSampleBox) {
+      const geometry_Box0 = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+      const material_Box0 = new THREE.MeshStandardMaterial( {
+        color: 0xffff00,
+        roughness: 1.0,
+        metalness: 0.0,
+        transparent: true,
+        opacity: 0.5
+      } );
+      const box0 = new THREE.Mesh(geometry_Box0, material_Box0);
+
+      box0.position.set(0, 1, -1);
+
+      const axesHelper = new THREE.AxesHelper(0.3);
+      box0.add(axesHelper);
+
+      this.globalObjectInstance.boxesGroup.add(box0);
+    }
+    */
+
+    
+  
 

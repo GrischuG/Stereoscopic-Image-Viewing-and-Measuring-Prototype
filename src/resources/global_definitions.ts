@@ -27,6 +27,8 @@ export class GlobalDefinition {
   public intersected: any;
   public boxesCreated: Boolean;
   public raycaster: any;
+  //public baseReferenceSpace: any;
+  public sessionStarted: boolean;
 
 
 
@@ -44,6 +46,8 @@ export class GlobalDefinition {
     this.intersected = new Array();
     this.boxesCreated = false;
     this.raycaster = new THREE.Raycaster();
+    this.sessionStarted = false;
 
   }
+
 }
