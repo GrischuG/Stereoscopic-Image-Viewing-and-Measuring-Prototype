@@ -5,7 +5,7 @@ import { ArInitiator } from './ar_initiator';
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory.js';
 import { XRHandModelFactory } from 'three/examples/jsm/webxr/XRHandModelFactory.js';
 import { Animator } from './animator';
-import { createText } from 'three/examples/jsm/webxr/Text2D.js';
+import {Text} from 'troika-three-text';
 
 
 @singleton()
@@ -166,7 +166,6 @@ export class Initiator {
 
     this.globalObjectInstance.scene.add(this.globalObjectInstance.boxesGroup);
     this.globalObjectInstance.scene.add(this.globalObjectInstance.linesGroup);
-    this.globalObjectInstance.scene.add(this.globalObjectInstance.distTexts);
     
     
     //added for VR support
@@ -348,39 +347,30 @@ export class Initiator {
     line.userData.box02 = box02;
     
 
-    
-
-
-
-
-
     // calculate distance between boxes, create, and display text facing the camera
     let distance = box01.position.distanceTo(box02.position).toFixed(5);
     let text = `Distance: ${distance}`;
-    let distanceText = createText(text, 0.05);
-    distanceText.position.set(box01.position.x, box01.position.y + boxSize*2, box01.position.z+0.01);
-    distanceText.lookAt(this.globalObjectInstance.camera.position);
-    
+
+    const distText = new Text();
+
+    box01.add(distText);
+
+    distText.position.y = 0.1;
+    distText.position.x = -0.17;
+
+    distText.text = text;
+    distText.fontSize = 0.05;
+    distText.color = 0xff0000; 
+
+
     // Save reference to distance text to line
-    line.userData.distanceText = distanceText;
+    line.userData.distanceText = distText;
 
-    //let boundingBox = distanceText.geometry.computeBoundingBox();
+    distText.sync();
 
-    
-
-    let backgroundGeom = new THREE.BoxGeometry(0.45, 0.06, 0.001);
-    let backgroundMat = new THREE.MeshPhongMaterial({color: 0xff0000});
-    let textBackground = new THREE.Mesh(backgroundGeom, backgroundMat);
-    textBackground.position.set(distanceText.position.x-0.01, distanceText.position.y-0.01, distanceText.position.z-0.01);
-    // textBackground.rotation.set(distanceText.rotation.x, distanceText.rotation.y, distanceText.rotation.z, distanceText.rotation.order);
-    textBackground.lookAt(this.globalObjectInstance.camera.position);
-    this.globalObjectInstance.scene.add(textBackground);
-
-
-    
+    distText.lookAt(this.globalObjectInstance.camera.position);    
 
     // Add everything to the respective groups
-    this.globalObjectInstance.distTexts.add(distanceText);
     this.globalObjectInstance.linesGroup.add(line);
     this.globalObjectInstance.boxesGroup.add(box01);
     this.globalObjectInstance.boxesGroup.add(box02);
@@ -404,16 +394,14 @@ export class Initiator {
       
       line.userData.geometry.setFromPoints([box01.position, box02.position]);
       
-      this.globalObjectInstance.distTexts.remove(line.userData.distanceText);
+      const distText = line.userData.distanceText;
 
       let distance = box01.position.distanceTo(box02.position).toFixed(5);
       let text = `Distance: ${distance}`;
-      let distanceText = createText(text, 0.05);
-      distanceText.position.set(box01.position.x, box01.position.y + this.globalObjectInstance.boxSize*2, box01.position.z);
-      distanceText.lookAt(this.globalObjectInstance.camera.position);
-      this.globalObjectInstance.distTexts.add(distanceText);
-    
-      line.userData.distanceText = distanceText;
+      
+      distText.text = text;
+      distText.lookAt(this.globalObjectInstance.camera.position);
+
     });
   
   }

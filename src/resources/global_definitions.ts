@@ -23,11 +23,9 @@ export class GlobalDefinition {
   public boxSize: number;
   public boxesGroup: THREE.Group;
   public linesGroup: THREE.Group;
-  public distTexts: THREE.Group;
   public intersected: any;
   public boxesCreated: Boolean;
   public raycaster: any;
-  //public baseReferenceSpace: any;
   public sessionStarted: boolean;
 
 
@@ -42,7 +40,6 @@ export class GlobalDefinition {
     this.boxSize = 0.05;  
     this.boxesGroup = new THREE.Group();
     this.linesGroup = new THREE.Group();
-    this.distTexts = new THREE.Group();
     this.intersected = new Array();
     this.boxesCreated = false;
     this.raycaster = new THREE.Raycaster();
