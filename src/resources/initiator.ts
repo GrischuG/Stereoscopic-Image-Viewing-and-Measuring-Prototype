@@ -196,8 +196,8 @@ export class Initiator {
 
     // --------------- IMPORTANT! --------------- //
     // Use 'Right Eye on Top' mode for stitching! //
-    const texture = new THREE.TextureLoader().load('../../testImages/Distance_181_02.jpg');
-    const texture2 = new THREE.TextureLoader().load('../../testImages/Distance_181_02.jpg');
+    const texture = new THREE.TextureLoader().load('../../testImages/Distance_172_02.jpg');
+    const texture2 = new THREE.TextureLoader().load('../../testImages/Distance_172_02.jpg');
 
 
     texture.repeat = new THREE.Vector2(1, 0.5);
