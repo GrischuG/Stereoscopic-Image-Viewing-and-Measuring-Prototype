@@ -196,8 +196,8 @@ export class Initiator {
 
     // --------------- IMPORTANT! --------------- //
     // Use 'Right Eye on Top' mode for stitching! //
-    const texture = new THREE.TextureLoader().load('../../testImages/Distance_172_02.jpg');
-    const texture2 = new THREE.TextureLoader().load('../../testImages/Distance_172_02.jpg');
+    const texture = new THREE.TextureLoader().load('../../testImages/Television.jpg');
+    const texture2 = new THREE.TextureLoader().load('../../testImages/Television.jpg');
 
 
     texture.repeat = new THREE.Vector2(1, 0.5);
@@ -303,7 +303,8 @@ export class Initiator {
     // Create two new boxes (random color)
     let geometryBox = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
     let materialBox = new THREE.MeshStandardMaterial( {
-      color: Math.random() * 0xffffff,
+      color: 0xff8800,
+      //color: Math.random() * 0xffffff,
       roughness: 1.0,
       metalness: 0.0,
       transparent: true,
