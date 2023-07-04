@@ -18,6 +18,7 @@ export class Initiator {
     private vrInitiator: VrInitiator,
     private animator: Animator
   ) {
+    
   }
 
   // 

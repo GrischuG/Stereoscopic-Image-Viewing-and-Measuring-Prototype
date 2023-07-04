@@ -16,6 +16,7 @@ export class VrInitiator {
     private globalObjectInstance: GlobalDefinition,
     private animator: Animator,
   ) {
+    
   }
 
 

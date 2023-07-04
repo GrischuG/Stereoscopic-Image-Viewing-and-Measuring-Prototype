@@ -8,12 +8,13 @@ import { Initiator } from 'resources/initiator';
 @autoinject()
 export class ThreeCanvas {
 
-
   constructor(
     private initiator: Initiator,
     private vrInitator: VrInitiator,
     private globalObjectInstance: GlobalDefinition
-  ) { }
+  ) { 
+    
+  }
 
 
   /**
