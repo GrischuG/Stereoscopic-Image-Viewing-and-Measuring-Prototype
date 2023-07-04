@@ -3,6 +3,8 @@ import { autoinject, singleton } from 'aurelia-framework';
 import { GlobalDefinition } from './global_definitions';
 import * as THREE from 'three';
 
+
+
 @singleton()
 @autoinject()
 export class Animator {
@@ -54,12 +56,12 @@ export class Animator {
 
   }
 
+
   /**
    * If intersected objects are found, this function hights the first object in the array by setting the emissive variable 'r' to 1. 
    * Additionally, the length of the line coming from the controller is set to the distance to the intersected object and pushes the object to the global 'intersected' array.
    * 
    * @param controller 
-   * @returns 
    */
   intersectObjects(controller) {
     if (controller.userData.selected !== undefined) return;
@@ -80,6 +82,7 @@ export class Animator {
     }
   }
 
+
   /**
    * Clears the global intersected array and sets the contained object's emissive variable 'r' to 0.
    */
@@ -93,27 +96,5 @@ export class Animator {
     }
   }
 
+
 }
-
-
-
-
-
-
-/*
-    if (this.globalObjectInstance.sessionStarted) {
-    
-      //const baseReferenceSpace = this.globalObjectInstance.renderer.xr.getReferenceSpace();
-      console.log("ReferenceSpace: ", this.globalObjectInstance.baseReferenceSpace);
-
-      const offsetPosition = {x: 0, y: 0, z: 0, w: 1 };
-      console.log("offsetPosition: ", offsetPosition);
-      const offsetRotation = new THREE.Quaternion();
-      //console.log("offsetRotation: ", offsetRotation);
-      const transform = new XRRigidTransform(offsetPosition, offsetRotation);
-      console.log("transform: ", transform);
-      const offset = this.globalObjectInstance.baseReferenceSpace.getOffsetReferenceSpace(transform);
-      
-      this.globalObjectInstance.renderer.xr.setReferenceSpace(offset);
-    }
-    */

@@ -1,11 +1,12 @@
 import { singleton, autoinject } from 'aurelia-framework';
 import * as THREE from 'three';
 import { GlobalDefinition } from "./global_definitions";
-import { ArInitiator } from './ar_initiator';
+import { VrInitiator } from './vr_initiator';
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory.js';
 import { XRHandModelFactory } from 'three/examples/jsm/webxr/XRHandModelFactory.js';
 import { Animator } from './animator';
 import {Text} from 'troika-three-text';
+
 
 
 @singleton()
@@ -14,12 +15,19 @@ export class Initiator {
 
   constructor(
     private globalObjectInstance: GlobalDefinition,
-    private arInitiator: ArInitiator,
+    private vrInitiator: VrInitiator,
     private animator: Animator
   ) {
   }
 
-  // custom function that tries to query an element until it is available
+  // 
+  /** 
+   * Custom function that tries to query an element until it is available.
+   * 
+   * @param id 
+   * @param object 
+   * @param propertyToAssign 
+   */
   async setElementsById(id, object, propertyToAssign) {
     // set an interval to check for the element
     const intervalId = setInterval(() => {
@@ -37,17 +45,18 @@ export class Initiator {
     }, 1000);
   }
 
+
   /**
-   * 
+   * globalObjectInstance is set to DomElementObjects from three_canvas.html.
    */
   async initDomObjectElements() {
-    // event on pointermove call updateMousePosText
     console.log('init DomElementObjects to globalObject')
     await this.setElementsById('container', this.globalObjectInstance, 'elementContainer')
   }
 
+
   /**
-   * 
+   * Performs initiations for the controls.
    */
   async controlsInit() {
 
@@ -65,12 +74,11 @@ export class Initiator {
     this.globalObjectInstance.hand2 = renderer.xr.getHand(1);
 
     console.log("Controls Init Finished!");
-
-    
   }
 
+
   /**
-   * 
+   * Creates the controllers to be used in VR and adds a line pointing away from controllers which will be used to better grab objects further away. Additionally, some event listeners are added to the controllers to be able to track controller input.
    */
   async setupControls() {
 
@@ -83,11 +91,11 @@ export class Initiator {
     const hand1 = this.globalObjectInstance.hand1;
     const hand2 = this.globalObjectInstance.hand2;
 
-    //orbit controls
+    // Orbit controls
     this.globalObjectInstance.orbitControls.target = new THREE.Vector3(0, 0, 0);
     
 
-    // max and min Zoom for OrbitControls
+    // Max and min Zoom for OrbitControls
     this.globalObjectInstance.orbitControls.minDistance = 0.2;
     this.globalObjectInstance.orbitControls.maxDistance = 20;
 
@@ -102,12 +110,12 @@ export class Initiator {
 		const handModelFactory = new XRHandModelFactory();
 
 
-    // get controller left (0)
+    // Get controller left (0)
     controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
     this.globalObjectInstance.scene.add(controllerGrip1);
 
 
-    // get controller right (1)
+    // Get controller right (1)
     controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
     this.globalObjectInstance.scene.add(controllerGrip2);
 
@@ -128,7 +136,7 @@ export class Initiator {
     this.globalObjectInstance.scene.add(hand2);
 
 
-    // create lines pointing away from controller in VR
+    // Create lines pointing away from controller in VR
     const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, - 1)]);
 
     const line = new THREE.Line(geometry);
@@ -142,24 +150,22 @@ export class Initiator {
     hand2.add(line.clone());
 
     console.log('Setup Controlls Finished');
-
   }
 
 
   /**
-   * 
+   * Initiates a suitable VR environment.
    */
-  async sceneInit() {
+  async vrEnvInit() {
 
     console.log('init scene');
     
+    // This eventlistener prevents uneccessary errors in a browser while not in VR
     this.globalObjectInstance.renderer.xr.addEventListener('sessionstart', () => {
       this.globalObjectInstance.sessionStarted = true;
     });
     
     this.globalObjectInstance.elementContainer = document.getElementById('container');
-    //this.globalObjectInstance.camera.aspect = this.globalObjectInstance.elementContainer.clientWidth / this.globalObjectInstance.elementContainer.clientHeight;
-    //this.globalObjectInstance.camera.updateProjectionMatrix();
     this.globalObjectInstance.renderer.xr.enabled = true;
     this.globalObjectInstance.renderer.setSize(this.globalObjectInstance.elementContainer.clientWidth, this.globalObjectInstance.elementContainer.clientHeight);
     this.globalObjectInstance.elementContainer.appendChild(this.globalObjectInstance.renderer.domElement);
@@ -168,80 +174,75 @@ export class Initiator {
     this.globalObjectInstance.scene.add(this.globalObjectInstance.linesGroup);
     
     
-    //added for VR support
-    // we set the animation loop that is always called.
-    //we bind .this since a callback has a higher order function
-    this.globalObjectInstance.renderer.setAnimationLoop(await this.arInitiator.render.bind(this.arInitiator))
+    // Added for VR support
+    // We set the animation loop that is always called.
+    // We bind .this since a callback has a higher order function
+    this.globalObjectInstance.renderer.setAnimationLoop(await this.vrInitiator.render.bind(this.vrInitiator))
 
-    //add directional light at camera position
+    // Add directional light at camera position
     const dLight = new THREE.DirectionalLight(0xffffff, 1);
     this.globalObjectInstance.scene.add(dLight);
 
-    //add hemisphere light
+    // Add hemisphere light
     const hemiLight = new THREE.HemisphereLight('white', 'white', 0.7);
     hemiLight.position.set(0, 0, -10);
     this.globalObjectInstance.scene.add(hemiLight);
 
     this.initStereoImage()
-
   }
 
 
-/**
- * 
- */
+  /**
+   * Initiates the stereoscopic imagery viewing capabilities. The combined left and right image imported is changed so that each part of the image (right & left, i.e., in the .jpg top & bottom) are used for their respective eye.
+   */
   initStereoImage() {
 
     this.globalObjectInstance.camera.layers.enable(1); // render left view when no stereo available
 
     // --------------- IMPORTANT! --------------- //
     // Use 'Right Eye on Top' mode for stitching! //
-    const texture = new THREE.TextureLoader().load('../../testImages/Television.jpg');
-    const texture2 = new THREE.TextureLoader().load('../../testImages/Television.jpg');
 
+    // Loads the textures
+    const texture = new THREE.TextureLoader().load('../../testImages/SLL_Cube_Left.jpg');
+    const texture2 = new THREE.TextureLoader().load('../../testImages/SLL_Cube_Left.jpg');
 
+    // Takes only top half of the image, i.e., the right eye.
     texture.repeat = new THREE.Vector2(1, 0.5);
 
-    //flip texture on x axis
+    // Flip texture2 to take lower half for left eye.
     texture2.flipY = true;
     texture2.repeat = new THREE.Vector2(1, 0.5);
     texture2.offset = new THREE.Vector2(0, 0.5);
 
 
-    //take only lower half of the video
     this.globalObjectInstance.scene.background = new THREE.Color(0x101010);
 
     
-    // left
-
+    // Left eye
+    
     const geometry1 = new THREE.SphereGeometry(500, 60, 40);
-    // invert the geometry on the x-axis so that all of the faces point inward
-    geometry1.scale(- 1, 1, 1);
-
+    geometry1.scale(- 1, 1, 1); // invert the geometry on the x-axis so that all of the faces point inward
     const material1 = new THREE.MeshBasicMaterial({ map: texture });
-
     const mesh1 = new THREE.Mesh(geometry1, material1);
     mesh1.rotation.y = - Math.PI / 2;
     mesh1.layers.set(1); // display in left eye only
     this.globalObjectInstance.scene.add(mesh1);
 
 
-    // right
+    // Right eye
 
     const geometry2 = new THREE.SphereGeometry(500, 60, 40);
     geometry2.scale(- 1, 1, 1);
-
     const material2 = new THREE.MeshBasicMaterial({ map: texture2 });
-
     const mesh2 = new THREE.Mesh(geometry2, material2);
     mesh2.rotation.y = - Math.PI / 2;
     mesh2.layers.set(2); // display in right eye only
     this.globalObjectInstance.scene.add(mesh2);
-
   }
 
 
   /**
+   * Called when 'selectend' event occured on controller. If a box is attached to the controller, i.e., can be moved around by the user, it is released. 
    * 
    * @param event 
    */
@@ -255,18 +256,19 @@ export class Initiator {
       controller.userData.selected = undefined;
       this.updateLines();
     }
-
   }
 
+
   /**
+   * Called when 'selectstart' event occured on controller. 
+   *  - If a box intersects with the controller's line, the box is grabbed, i.e., attached to the controller. 
+   *  - If no objects are present yet, two boxes are created.
    * 
    * @param event 
    */
   onSelectStart(event) {
-
-    let controller = event.target;
-
-    let intersections = this.animator.getIntersections(controller);
+    const controller = event.target;
+    const intersections = this.animator.getIntersections(controller);
 
     if (intersections.length > 0) {
       this.setIntersection(controller, intersections);
@@ -275,10 +277,11 @@ export class Initiator {
         this.createNewBoxes(controller);
       }
     }
-    
   }
 
+
   /**
+   * The first object intersecting with a controller's line is attached to the controller, thus, movable by the user.
    * 
    * @param controller 
    * @param intersections 
@@ -290,21 +293,21 @@ export class Initiator {
     controller.attach(object);
     
     controller.userData.selected = object;
-
   }
 
+
   /**
+   * Creates two new boxes at both controllers' respective positions. Additionally, adds a line connecting the two boxes and a text displaying their distance.
    * 
    * @param controller 
    */
   createNewBoxes(controller) {
     const boxSize = this.globalObjectInstance.boxSize; 
 
-    // Create two new boxes (random color)
+    // Create two new boxes
     let geometryBox = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
     let materialBox = new THREE.MeshStandardMaterial( {
       color: 0xff8800,
-      //color: Math.random() * 0xffffff,
       roughness: 1.0,
       metalness: 0.0,
       transparent: true,
@@ -317,7 +320,7 @@ export class Initiator {
     box01.userData.other_Box = box02;
     box02.userData.other_Box = box01;
 
-    // Set position an rotation of boxes to respective controller position and rotation
+    // Set position and rotation of boxes to respective controller position and rotation
     box01.position.set(controller.position.x, controller.position.y, controller.position.z);
     box01.quaternion.copy(controller.quaternion);
     let otherController = controller.userData.other_Controller;
@@ -328,7 +331,7 @@ export class Initiator {
     box01.add(new THREE.AxesHelper(0.03));
     box02.add(new THREE.AxesHelper(0.03));
 
-    // Create a line
+    // Create a line between the boxes
     let lineGeometry = new THREE.BufferGeometry();
     lineGeometry.setFromPoints([box01.position, box02.position]);
     let lineMaterial = new THREE.LineBasicMaterial({
@@ -337,7 +340,7 @@ export class Initiator {
     let line = new THREE.Line(lineGeometry, lineMaterial);
 
     // Save reference for line geometry to userData explicitly for use in updateLines()-method
-    line.userData.geometry = line.geometry;
+    line.userData.lineGeometry = line.geometry;
 
     // Save reference for line to each box
     box01.userData.thisLine = line;
@@ -351,24 +354,22 @@ export class Initiator {
     // calculate distance between boxes, create, and display text facing the camera
     let distance = box01.position.distanceTo(box02.position).toFixed(5);
     let text = `Distance: ${distance}`;
-
-    const distText = new Text();
-
+    let distText = new Text();
     box01.add(distText);
-
     distText.position.y = 0.1;
     distText.position.x = -0.17;
-
     distText.text = text;
     distText.fontSize = 0.05;
     distText.color = 0xff0000; 
 
 
-    // Save reference to distance text to line
+    // Save reference for distance text to line
     line.userData.distanceText = distText;
 
+    // Updates the text rendering configuration properties
     distText.sync();
 
+    // Makes the text face the camera
     distText.lookAt(this.globalObjectInstance.camera.position);    
 
     // Add everything to the respective groups
@@ -377,23 +378,22 @@ export class Initiator {
     this.globalObjectInstance.boxesGroup.add(box02);
 
     this.globalObjectInstance.boxesCreated = true;
-    
   }
 
 
   /**
-   * 
+   * Updates the line connecting the two boxes after one of their positions has changed.
    */
   updateLines() {
     
-    let lines = this.globalObjectInstance.linesGroup.children;
+    const lines = this.globalObjectInstance.linesGroup.children;
 
     lines.forEach(line => {
       
       let box01 = line.userData.box01;
       let box02 = line.userData.box02;
       
-      line.userData.geometry.setFromPoints([box01.position, box02.position]);
+      line.userData.lineGeometry.setFromPoints([box01.position, box02.position]);
       
       const distText = line.userData.distanceText;
 
@@ -404,34 +404,8 @@ export class Initiator {
       distText.lookAt(this.globalObjectInstance.camera.position);
 
     });
-  
   }
 
+
 }
-
-/*
-const enableSampleBox = false;
-
-    if (enableSampleBox) {
-      const geometry_Box0 = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-      const material_Box0 = new THREE.MeshStandardMaterial( {
-        color: 0xffff00,
-        roughness: 1.0,
-        metalness: 0.0,
-        transparent: true,
-        opacity: 0.5
-      } );
-      const box0 = new THREE.Mesh(geometry_Box0, material_Box0);
-
-      box0.position.set(0, 1, -1);
-
-      const axesHelper = new THREE.AxesHelper(0.3);
-      box0.add(axesHelper);
-
-      this.globalObjectInstance.boxesGroup.add(box0);
-    }
-    */
-
-    
-  
 

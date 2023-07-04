@@ -12,7 +12,6 @@ export class GlobalDefinition {
   public camera:    THREE.PerspectiveCamera;
   public renderer: THREE.WebGLRenderer;
   public orbitControls: OrbitControls;
-  public arButton: HTMLElement;
   public vrButton: HTMLElement;
   public controller1: THREE.Group; 
   public controller2: THREE.Group;
@@ -35,7 +34,6 @@ export class GlobalDefinition {
     this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 2000);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.orbitControls = new OrbitControls(this.camera, this.renderer.domElement);
-    this.arButton = undefined; 
     this.vrButton = undefined;
     this.boxSize = 0.05;  
     this.boxesGroup = new THREE.Group();

@@ -7,7 +7,7 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton';
 
 @singleton()
 @autoinject()
-export class ArInitiator {
+export class VrInitiator {
 
   worldOriginMesh: THREE.Mesh;
   jumpMesh: THREE.Mesh;
@@ -19,23 +19,21 @@ export class ArInitiator {
   }
 
 
-  async render(timestamp, frame) {
-    // animate the animator
-
-    
-
+  /**
+   * Calls the animate()-function from the Animator.
+   */
+  async render() {
     await this.animator.animate();
   }
 
 
-
-  async ARInit() {
-    //create AR button
-    this.globalObjectInstance.arButton = VRButton.createButton(this.globalObjectInstance.renderer);
-    document.body.appendChild(this.globalObjectInstance.arButton);
+  /**
+   * Creates the 'Enter VR' Button for entering the VR environment on a website.
+   */
+  async VRInit() {
+    this.globalObjectInstance.vrButton = VRButton.createButton(this.globalObjectInstance.renderer);
+    document.body.appendChild(this.globalObjectInstance.vrButton);
   }
 
   
-
 }
-
