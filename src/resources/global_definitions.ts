@@ -9,7 +9,7 @@ export class GlobalDefinition {
 
   public elementContainer: HTMLElement;
   public scene: THREE.Scene;
-  public camera:    THREE.PerspectiveCamera;
+  public camera: THREE.PerspectiveCamera;
   public renderer: THREE.WebGLRenderer;
   public orbitControls: OrbitControls;
   public vrButton: HTMLElement;

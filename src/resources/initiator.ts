@@ -23,7 +23,7 @@ export class Initiator {
 
   // 
   /** 
-   * Custom function that tries to query an element until it is available.
+   * Custom function that tries to query an element from the 'document' until it is available.
    * 
    * @param id 
    * @param object 
@@ -41,7 +41,7 @@ export class Initiator {
       }
       // if element is not found, log a message
       else {
-        console.log(`element ${id} undefined`);
+        console.log(`element ${id} not defined`);
       }
     }, 1000);
   }
@@ -53,6 +53,81 @@ export class Initiator {
   async initDomObjectElements() {
     console.log('init DomElementObjects to globalObject')
     await this.setElementsById('container', this.globalObjectInstance, 'elementContainer')
+  }
+
+
+  /**
+   * Initiates a suitable VR environment.
+   */
+  async vrEnvInit() {
+    console.log('init scene');
+    
+    // This eventlistener prevents uneccessary errors in a browser while not in VR
+    this.globalObjectInstance.renderer.xr.addEventListener('sessionstart', () => {
+      this.globalObjectInstance.sessionStarted = true;
+    });
+    
+    this.globalObjectInstance.elementContainer = document.getElementById('container');
+    this.globalObjectInstance.elementContainer.appendChild(this.globalObjectInstance.renderer.domElement);
+    this.globalObjectInstance.renderer.xr.enabled = true; // Added for VR support
+    this.globalObjectInstance.renderer.setSize(this.globalObjectInstance.elementContainer.clientWidth, this.globalObjectInstance.elementContainer.clientHeight);
+    this.globalObjectInstance.renderer.setAnimationLoop(await this.vrInitiator.render.bind(this.vrInitiator)); // We set the animation loop that is always called. We bind .this since a callback has a higher order function
+
+    this.globalObjectInstance.scene.add(this.globalObjectInstance.boxesGroup);
+    this.globalObjectInstance.scene.add(this.globalObjectInstance.linesGroup);
+
+    // Add ambient light
+    const aLight = new THREE.AmbientLight(0xffffff, 0.7);
+    this.globalObjectInstance.scene.add(aLight);
+
+    // Add directional light at camera position
+    const dLight = new THREE.DirectionalLight(0xffffff, 1);
+    this.globalObjectInstance.scene.add(dLight);
+
+    this.initStereoImage()
+  }
+
+
+  /**
+   * Initiates the stereoscopic imagery viewing capabilities. The combined left and right image imported is changed so that each part of the image (right & left, i.e., in the .jpg top & bottom) are used for their respective eye.
+   */
+  initStereoImage() {
+    // --------------- IMPORTANT! --------------- //
+    // Use 'Right Eye on Top' mode for stitching! //
+
+    // Loads the textures
+    const texture = new THREE.TextureLoader().load('../../testImages/Television.jpg');
+    const texture2 = new THREE.TextureLoader().load('../../testImages/Television.jpg');
+
+    // Takes only top half of the image, i.e., the right eye.
+    texture.repeat = new THREE.Vector2(1, 0.5);
+
+    // Flip texture2 to take lower half for left eye.
+    texture2.flipY = true;
+    texture2.repeat = new THREE.Vector2(1, 0.5);
+    texture2.offset = new THREE.Vector2(0, 0.5);
+
+    this.globalObjectInstance.camera.layers.enable(1); // render left view when no stereo available
+    this.globalObjectInstance.scene.background = new THREE.Color(0x101010);
+
+    // Left eye
+    const geometry1 = new THREE.SphereGeometry(500, 60, 40);
+    geometry1.scale(- 1, 1, 1); // invert the geometry on the x-axis so that all of the faces point inward
+    const material1 = new THREE.MeshBasicMaterial({ map: texture });
+    const mesh1 = new THREE.Mesh(geometry1, material1);
+    mesh1.rotation.y = - Math.PI / 2;
+    mesh1.layers.set(1); // display in left eye only
+    this.globalObjectInstance.scene.add(mesh1);
+
+
+    // Right eye
+    const geometry2 = new THREE.SphereGeometry(500, 60, 40);
+    geometry2.scale(- 1, 1, 1);
+    const material2 = new THREE.MeshBasicMaterial({ map: texture2 });
+    const mesh2 = new THREE.Mesh(geometry2, material2);
+    mesh2.rotation.y = - Math.PI / 2;
+    mesh2.layers.set(2); // display in right eye only
+    this.globalObjectInstance.scene.add(mesh2);
   }
 
 
@@ -75,13 +150,14 @@ export class Initiator {
     this.globalObjectInstance.hand2 = renderer.xr.getHand(1);
 
     console.log("Controls Init Finished!");
+    this.setupControls();
   }
 
 
   /**
    * Creates the controllers to be used in VR and adds a line pointing away from controllers which will be used to better grab objects further away. Additionally, some event listeners are added to the controllers to be able to track controller input.
    */
-  async setupControls() {
+  setupControls() {
 
     const controller1 = this.globalObjectInstance.controller1;
     const controller2 = this.globalObjectInstance.controller2;
@@ -95,28 +171,22 @@ export class Initiator {
     // Orbit controls
     this.globalObjectInstance.orbitControls.target = new THREE.Vector3(0, 0, 0);
     
-
     // Max and min Zoom for OrbitControls
     this.globalObjectInstance.orbitControls.minDistance = 0.2;
     this.globalObjectInstance.orbitControls.maxDistance = 20;
-
     this.globalObjectInstance.orbitControls.update();
-
 
     // controllers
     this.globalObjectInstance.scene.add(controller1)
     this.globalObjectInstance.scene.add(controller2)
 
     const controllerModelFactory = new XRControllerModelFactory();
-		const handModelFactory = new XRHandModelFactory();
 
-
-    // Get controller left (0)
+    // Create virtual controller left (0)
     controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
     this.globalObjectInstance.scene.add(controllerGrip1);
 
-
-    // Get controller right (1)
+    // Create virtual controller right (1)
     controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
     this.globalObjectInstance.scene.add(controllerGrip2);
 
@@ -127,6 +197,7 @@ export class Initiator {
     controller2.addEventListener('selectstart', this.onSelectStart.bind(this));
     controller2.addEventListener('selectend', this.onSelectEnd.bind(this));
 
+    const handModelFactory = new XRHandModelFactory();
 
     // hand 1
     hand1.add(handModelFactory.createHandModel(hand1, 'mesh'));
@@ -136,10 +207,8 @@ export class Initiator {
     hand2.add(handModelFactory.createHandModel(hand2, 'mesh')); 
     this.globalObjectInstance.scene.add(hand2);
 
-
     // Create lines pointing away from controller in VR
     const geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, - 1)]);
-
     const line = new THREE.Line(geometry);
 		line.name = 'line';
 		line.scale.z = 2;
@@ -151,94 +220,6 @@ export class Initiator {
     hand2.add(line.clone());
 
     console.log('Setup Controlls Finished');
-  }
-
-
-  /**
-   * Initiates a suitable VR environment.
-   */
-  async vrEnvInit() {
-
-    console.log('init scene');
-    
-    // This eventlistener prevents uneccessary errors in a browser while not in VR
-    this.globalObjectInstance.renderer.xr.addEventListener('sessionstart', () => {
-      this.globalObjectInstance.sessionStarted = true;
-    });
-    
-    this.globalObjectInstance.elementContainer = document.getElementById('container');
-    this.globalObjectInstance.renderer.xr.enabled = true;
-    this.globalObjectInstance.renderer.setSize(this.globalObjectInstance.elementContainer.clientWidth, this.globalObjectInstance.elementContainer.clientHeight);
-    this.globalObjectInstance.elementContainer.appendChild(this.globalObjectInstance.renderer.domElement);
-
-    this.globalObjectInstance.scene.add(this.globalObjectInstance.boxesGroup);
-    this.globalObjectInstance.scene.add(this.globalObjectInstance.linesGroup);
-    
-    
-    // Added for VR support
-    // We set the animation loop that is always called.
-    // We bind .this since a callback has a higher order function
-    this.globalObjectInstance.renderer.setAnimationLoop(await this.vrInitiator.render.bind(this.vrInitiator))
-
-    // Add directional light at camera position
-    const dLight = new THREE.DirectionalLight(0xffffff, 1);
-    this.globalObjectInstance.scene.add(dLight);
-
-    // Add hemisphere light
-    const hemiLight = new THREE.HemisphereLight('white', 'white', 0.7);
-    hemiLight.position.set(0, 0, -10);
-    this.globalObjectInstance.scene.add(hemiLight);
-
-    this.initStereoImage()
-  }
-
-
-  /**
-   * Initiates the stereoscopic imagery viewing capabilities. The combined left and right image imported is changed so that each part of the image (right & left, i.e., in the .jpg top & bottom) are used for their respective eye.
-   */
-  initStereoImage() {
-
-    this.globalObjectInstance.camera.layers.enable(1); // render left view when no stereo available
-
-    // --------------- IMPORTANT! --------------- //
-    // Use 'Right Eye on Top' mode for stitching! //
-
-    // Loads the textures
-    const texture = new THREE.TextureLoader().load('../../testImages/SLL_Cube_Left.jpg');
-    const texture2 = new THREE.TextureLoader().load('../../testImages/SLL_Cube_Left.jpg');
-
-    // Takes only top half of the image, i.e., the right eye.
-    texture.repeat = new THREE.Vector2(1, 0.5);
-
-    // Flip texture2 to take lower half for left eye.
-    texture2.flipY = true;
-    texture2.repeat = new THREE.Vector2(1, 0.5);
-    texture2.offset = new THREE.Vector2(0, 0.5);
-
-
-    this.globalObjectInstance.scene.background = new THREE.Color(0x101010);
-
-    
-    // Left eye
-    
-    const geometry1 = new THREE.SphereGeometry(500, 60, 40);
-    geometry1.scale(- 1, 1, 1); // invert the geometry on the x-axis so that all of the faces point inward
-    const material1 = new THREE.MeshBasicMaterial({ map: texture });
-    const mesh1 = new THREE.Mesh(geometry1, material1);
-    mesh1.rotation.y = - Math.PI / 2;
-    mesh1.layers.set(1); // display in left eye only
-    this.globalObjectInstance.scene.add(mesh1);
-
-
-    // Right eye
-
-    const geometry2 = new THREE.SphereGeometry(500, 60, 40);
-    geometry2.scale(- 1, 1, 1);
-    const material2 = new THREE.MeshBasicMaterial({ map: texture2 });
-    const mesh2 = new THREE.Mesh(geometry2, material2);
-    mesh2.rotation.y = - Math.PI / 2;
-    mesh2.layers.set(2); // display in right eye only
-    this.globalObjectInstance.scene.add(mesh2);
   }
 
 
@@ -272,7 +253,7 @@ export class Initiator {
     const intersections = this.animator.getIntersections(controller);
 
     if (intersections.length > 0) {
-      this.setIntersection(controller, intersections);
+      this.takeBox(controller, intersections);
     } else {
       if (!this.globalObjectInstance.boxesCreated) {
         this.createNewBoxes(controller);
@@ -287,7 +268,7 @@ export class Initiator {
    * @param controller 
    * @param intersections 
    */
-  setIntersection(controller, intersections) {
+  takeBox(controller, intersections) {
     const intersection = intersections[0];
     const object = intersection.object;
     object.material.emissive.b = 1;
@@ -351,7 +332,6 @@ export class Initiator {
     line.userData.box01 = box01;
     line.userData.box02 = box02;
     
-
     // calculate distance between boxes, create, and display text facing the camera
     let distance = box01.position.distanceTo(box02.position).toFixed(5);
     let text = `Distance: ${distance}`;
@@ -362,7 +342,6 @@ export class Initiator {
     distText.text = text;
     distText.fontSize = 0.05;
     distText.color = 0xff0000; 
-
 
     // Save reference for distance text to line
     line.userData.distanceText = distText;
@@ -386,24 +365,19 @@ export class Initiator {
    * Updates the line connecting the two boxes after one of their positions has changed.
    */
   updateLines() {
-    
     const lines = this.globalObjectInstance.linesGroup.children;
 
     lines.forEach(line => {
-      
       let box01 = line.userData.box01;
       let box02 = line.userData.box02;
       
       line.userData.lineGeometry.setFromPoints([box01.position, box02.position]);
-      
       const distText = line.userData.distanceText;
-
       let distance = box01.position.distanceTo(box02.position).toFixed(5);
       let text = `Distance: ${distance}`;
       
       distText.text = text;
       distText.lookAt(this.globalObjectInstance.camera.position);
-
     });
   }
 

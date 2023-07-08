@@ -25,35 +25,12 @@ export class Animator {
    *      and calls the render method to render the ThreeJS VR enviromnet
    */
   async animate() {
-
     this.clearIntersected();
 
     this.intersectObjects(this.globalObjectInstance.controller1);
     this.intersectObjects(this.globalObjectInstance.controller2);
 
     this.globalObjectInstance.renderer.render(this.globalObjectInstance.scene, this.globalObjectInstance.camera);
-
-  }
-
-
-  /**
-   * Returns an array of intersections between the raycaster's ray and the boxes in boxesGroup.
-   * 
-   * @param controller 
-   * @returns array of intersected boxes
-   */
-  getIntersections(controller) {
-
-    let raycaster = this.globalObjectInstance.raycaster;
-
-    // Gets rotation (direction) of controller position
-    this.tempMatrix.identity().extractRotation(controller.matrixWorld);
-
-    // Casts raycaster ray away from controller
-    raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
-    return raycaster.intersectObjects(this.globalObjectInstance.boxesGroup.children, false);
-
   }
 
 
@@ -76,7 +53,7 @@ export class Animator {
       this.globalObjectInstance.intersected.push(object);
 
       line.scale.z = intersection.distance;
-
+      
     } else {
       line.scale.z = 5;
     }
@@ -84,10 +61,28 @@ export class Animator {
 
 
   /**
+   * Returns an array of intersections between the raycaster's ray and the boxes in boxesGroup.
+   * 
+   * @param controller 
+   * @returns array of intersected boxes
+   */
+  getIntersections(controller) {
+    let raycaster = this.globalObjectInstance.raycaster;
+
+    // Gets rotation (direction) of controller position
+    this.tempMatrix.identity().extractRotation(controller.matrixWorld);
+
+    // Casts raycaster ray away from controller
+    raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
+    raycaster.ray.direction.set(0, 0, -1).applyMatrix4(this.tempMatrix);
+    return raycaster.intersectObjects(this.globalObjectInstance.boxesGroup.children, false);
+  }
+
+
+  /**
    * Clears the global intersected array and sets the contained object's emissive variable 'r' to 0.
    */
   clearIntersected() {
-
     let intersected = this.globalObjectInstance.intersected;
 
     while (intersected.length) {

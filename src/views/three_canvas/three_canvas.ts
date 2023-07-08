@@ -21,13 +21,11 @@ export class ThreeCanvas {
    * This function comes from the Aurelia framework and attaches the code to the DOM.
    */
   async attached() {
-    //set globalObjectInstance html elements
-    await this.initiator.initDomObjectElements().then(
+    await this.initiator.initDomObjectElements( //set globalObjectInstance html elements
+    ).then(
       async () => await this.initiator.vrEnvInit()
     ).then(
       async () => await this.initiator.controlsInit()
-    ).then(
-      async () => await this.initiator.setupControls()
     ).then(
       async () => this.vrInitator.VRInit()
     )
