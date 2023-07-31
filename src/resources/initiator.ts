@@ -5,7 +5,7 @@ import { VrInitiator } from './vr_initiator';
 import { XRControllerModelFactory } from 'three/examples/jsm/webxr/XRControllerModelFactory.js';
 import { XRHandModelFactory } from 'three/examples/jsm/webxr/XRHandModelFactory.js';
 import { Animator } from './animator';
-import {Text} from 'troika-three-text';
+import { Text } from 'troika-three-text';
 
 
 
