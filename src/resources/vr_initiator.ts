@@ -9,9 +9,6 @@ import { VRButton } from 'three/examples/jsm/webxr/VRButton';
 @autoinject()
 export class VrInitiator {
 
-  worldOriginMesh: THREE.Mesh;
-  jumpMesh: THREE.Mesh;
-
   constructor(
     private globalObjectInstance: GlobalDefinition,
     private animator: Animator,
