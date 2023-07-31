@@ -1,6 +1,5 @@
 import { Animator } from './animator';
 import { singleton, autoinject } from 'aurelia-framework';
-import * as THREE from 'three';
 import { GlobalDefinition } from './global_definitions';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton';
 

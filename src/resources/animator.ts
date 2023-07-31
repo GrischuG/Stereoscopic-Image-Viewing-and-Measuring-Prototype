@@ -1,4 +1,3 @@
-
 import { autoinject, singleton } from 'aurelia-framework';
 import { GlobalDefinition } from './global_definitions';
 import * as THREE from 'three';
