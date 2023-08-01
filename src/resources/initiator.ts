@@ -96,8 +96,8 @@ export class Initiator {
     // Use 'Right Eye on Top' mode for stitching! //
 
     // Loads the textures
-    const texture = new THREE.TextureLoader().load('../../testImages/Television.jpg');
-    const texture2 = new THREE.TextureLoader().load('../../testImages/Television.jpg');
+    const texture = new THREE.TextureLoader().load('../../testImages/TelevisionBlurred.jpg');
+    const texture2 = new THREE.TextureLoader().load('../../testImages/TelevisionBlurred.jpg');
 
     // Takes only top half of the image, i.e., the right eye.
     texture.repeat = new THREE.Vector2(1, 0.5);
