@@ -27,8 +27,9 @@ When connected to the website via a VR headset, the user should be able to see a
 
 ## Controls
 Is is recommended to use regular controllers to interact with the VR environment. Altough hand tracking is supported (tested with the Meta Quest Pro), this use case does not suited itself well for this type of control.
+
 To start measuring in the 3D space, two boxes have to be created by pressing any button on the controllers (if not otherwise reserved by the system). The two boxes should be visible at each controller's loaction at creation. 
+
 In order to move a box, the user must point towards it with the controller and press any button. The boxes change color according to whether the user is pointing at them or whether a box is picked up. To move a box, the user must keep the button pressed. To place a box at its current location, the user has to release the pressed button.
-To measure, e.g., an object's height, the two boxes have to be placed at the corresponing object's points in the perceived 3D space. This is solely up to the users intuition of the 3D space.
 
 
