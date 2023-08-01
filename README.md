@@ -18,6 +18,7 @@ Other dependencies are automatically installed upon running the installation pro
 In the main project directory:
 1. `npm install` -> if you get errors in the next step run npm install again
 2. `npm run start` -> this will start the webpack server on localhost port 8080
+
 Then:
 3. run a server with https. For example, ngrok: https://ngrok.com/ -> after registration locate your ngrok exe file and run `./ngrok http 8080 --host-header="localhost:8080" `. A link will be provided in the terminal with which the website can be accessed from the web.
 
