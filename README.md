@@ -5,9 +5,9 @@ This program allows to view stereoscopic footage in a VR environment running on 
 # Prerequisites
 
 For this prototype to run as intended, the user must have the following:
-    * A VR capable headset with the possibility to access a browser.
-    * Node.js to run the webserver.
-    * Ngrok is recommended to use the prototype without the need for a direct link to the machine running the webserver.
+* A VR capable headset with the possibility to access a browser.
+* Node.js to run the webserver.
+* Ngrok is recommended to use the prototype without the need for a direct link to the machine running the webserver.
 
 Ngrok provides an easy to use solution to forward a port to a web-accessible link. It is required to have an Ngrok account to use this feature. For further information visit ![Setup & Installation on ngrok.com](https://dashboard.ngrok.com/get-started/setup).
 
@@ -15,8 +15,8 @@ Other dependencies are automatically installed upon running the installation pro
 
 # Installation
 
-1. npm install -> if you get errors in the next step run npm install again
-2. npm run start -> this will start the webpack server on localhost port 8080
-3. run a server with https. For example, ngrok: https://ngrok.com/ -> after registration locate your ngrok exe file and run ``./ngrok http 8080 --host-header="localhost:8080" ``
+1. `npm install` -> if you get errors in the next step run npm install again
+2. `npm run start` -> this will start the webpack server on localhost port 8080
+3. run a server with https. For example, ngrok: https://ngrok.com/ -> after registration locate your ngrok exe file and run `./ngrok http 8080 --host-header="localhost:8080" `. A link will be provided in the terminal with which the website can be accessed from the web.
 
 # Use
