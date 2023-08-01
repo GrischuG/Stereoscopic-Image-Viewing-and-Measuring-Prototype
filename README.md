@@ -32,4 +32,4 @@ To start measuring in the 3D space, two boxes have to be created by pressing any
 
 In order to move a box, the user must point towards it with the controller and press any button. The boxes change color according to whether the user is pointing at them or whether a box is picked up. To move a box, the user must keep the button pressed. To place a box at its current location, the user has to release the pressed button.
 
-
+The distance between the boxes is shown above one of the two. This distance displayed is already in meters.
